@@ -1,1 +1,61 @@
 https://databricks-prod-cloudfront.cloud.databricks.com/public/4027ec902e239c93eaaa8714f173bcfc/8784276487192519/4177895249355670/3104834831639021/latest.html
+
+pip install --upgrade pip
+!apt-get install openjdk-8-jdk-headless -qq > /dev/null
+!wget -q http://archive.apache.org/dist/spark/spark-3.1.1/spark-3.1.1-bin-hadoop3.2.tgz
+!tar xf spark-3.1.1-bin-hadoop3.2.tgz
+!pip install -q findspark
+import os
+os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-8-openjdk-amd64"
+os.environ["SPARK_HOME"] = "/content/spark-3.1.1-bin-hadoop3.2"
+rom pyspark.sql.types import StructType,StructField,DoubleType,IntegerType,StringType
+labels = [
+     ('age',IntegerType()),
+     ('job',StringType()),
+     ('marital',StringType()),
+     ('education',StringType()),
+     ('default',StringType()),
+     ('balance',DoubleType()),
+     ('housing',StringType()),
+     ('loan',StringType()),
+     ('contact',StringType()),
+     ('month',StringType()),
+     ('duration',IntegerType()),
+     ('campaign',IntegerType()),
+     ('poutcome',StringType()),
+     ('y',StringType())]
+from pyspark.sql.types import *chema = StructType([StructField (x[0], x[1], True) for x in labels])
+schema
+df = spark.read.csv('dbfs:/FileStore/tables/bank_full.csv', header=True, sep=";", schema=schema)
+df.printSchema()
+from pyspark.sql.functions import col
+# Filtering rows in PySpark
+total_count = df.count()
+print("TOTAL RECORD COUNT: " + str(total_count)) 
+telephone_filtered_count = df.filter(col('contact')=='telephone').count()
+print("TELEPHONE FILTERED RECORD COUNT: " + str(telephone_filtered_count))
+df.filter(col('contact')=='telephone').show(truncate=False)
+
+#Which marital status group has the highest percentage of individuals who take out housing loans?
+df = spark.read.csv('dbfs:/FileStore/tables/bank_full.csv', header=True, sep=";", inferSchema=True)
+single_YES = df.filter((col('marital')=='single') & (col('housing')=='yes'))
+single_NO = df.filter((col('marital')=='single') & (col('housing')=='no'))
+married_YES = df.filter((col('marital')=='married') & (col('housing')=='yes'))
+married_NO = df.filter((col('marital')=='married') & (col('housing')=='no'))
+divorced_YES = df.filter((col('marital')=='divorced') & (col('housing')=='yes'))
+divorced_NO = df.filter((col('marital')=='divorced') & (col('housing')=='no'))
+ 
+print("Number of singles takes housing loan: "+str(single_YES.count()))
+print("Number of singles who does not take housing loan: "+str(single_NO.count()))
+print("Number of married persons who takes housing loan: "+str(married_YES.count()))
+print("Number of married persons who does not take housing loan: "+str(married_NO.count()))
+print("Number of divorced persons who takes housing loan: "+str(divorced_YES.count()))
+print("Number of divorced persons who does not take housing loan: "+str(divorced_NO.count()))
+
+ #What proportion of individuals still rely on telephone landlines for communication instead of using cellular phones?
+f = spark.read.csv('dbfs:/FileStore/tables/bank_full.csv', header=True, sep=";", inferSchema=True)
+Adults = df.filter((col('age')<=50) & (col('loan')=='yes'))
+Seniors = df.filter((col('age')>=50) & (col('loan')=='yes'))
+ 
+print("Number of Adults who takes loan: "+str(Adults.count()))
+print("Number of Seniors who takes loan: "+str(Seniors.count()))
